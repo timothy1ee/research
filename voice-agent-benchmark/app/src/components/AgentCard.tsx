@@ -208,9 +208,16 @@ export function AgentCard({ agent }: AgentCardProps) {
           </span>
         )}
         {agent.status === 'error' && (
-          <span className="text-xs text-red-400 flex items-center gap-1">
-            <AlertCircle size={12} /> Error
-          </span>
+          <div className="text-xs text-red-400">
+            <span className="flex items-center gap-1">
+              <AlertCircle size={12} /> Error
+            </span>
+            {agent.errorMessage && (
+              <div className="mt-1 text-red-300 text-xs opacity-80 line-clamp-2">
+                {agent.errorMessage}
+              </div>
+            )}
+          </div>
         )}
       </div>
 

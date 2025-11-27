@@ -2,6 +2,49 @@ import { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, Send, SkipForward, Loader2 } from 'lucide-react';
 import { useAppStore } from '../store';
 
+// Extend Window interface for Web Speech API
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+  isFinal: boolean;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: Event) => void) | null;
+  onend: (() => void) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
+
 export function InputControls() {
   const {
     userInput,
@@ -15,10 +58,13 @@ export function InputControls() {
   } = useAppStore();
 
   const [audioLevel, setAudioLevel] = useState(0);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationRef = useRef<number | undefined>(undefined);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const transcriptRef = useRef<string>('');
 
   // Check if any agent is processing
   const isAnyProcessing = session.agents.some(
@@ -58,6 +104,52 @@ export function InputControls() {
       };
       updateLevel();
 
+      // Set up Web Speech API for transcription
+      const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognitionClass) {
+        const recognition = new SpeechRecognitionClass();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        transcriptRef.current = '';
+
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
+          let finalTranscript = '';
+          let interimTranscript = '';
+
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript;
+            } else {
+              interimTranscript += transcript;
+            }
+          }
+
+          if (finalTranscript) {
+            transcriptRef.current += finalTranscript;
+          }
+
+          // Show interim results in the input field
+          setUserInput(transcriptRef.current + interimTranscript);
+        };
+
+        recognition.onerror = (event) => {
+          console.error('Speech recognition error:', event);
+        };
+
+        recognition.onend = () => {
+          // Finalize transcript when recognition ends
+          if (transcriptRef.current.trim()) {
+            setUserInput(transcriptRef.current.trim());
+          }
+        };
+
+        recognitionRef.current = recognition;
+        recognition.start();
+      }
+
       // Set up media recorder
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
@@ -82,12 +174,6 @@ export function InputControls() {
         // Create audio blob
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         setUserAudioBlob(audioBlob);
-
-        // Transcribe using Web Speech API if available
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-          // Note: For real transcription, you'd want to use a proper STT service
-          // This is just a placeholder for demo purposes
-        }
       };
 
       mediaRecorder.start();
@@ -99,10 +185,28 @@ export function InputControls() {
   };
 
   const stopRecording = () => {
+    // Stop speech recognition
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+
+    // Stop media recorder
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
+
     setIsRecording(false);
+    setIsTranscribing(true);
+
+    // Wait a short moment for final transcript, then auto-submit
+    setTimeout(() => {
+      setIsTranscribing(false);
+      const currentInput = useAppStore.getState().userInput;
+      if (currentInput.trim()) {
+        submitUserInput();
+      }
+    }, 500);
   };
 
   const handleSubmit = () => {
@@ -233,8 +337,10 @@ export function InputControls() {
 
       {/* Help text */}
       <div className="mt-2 text-xs text-gray-500 text-center">
-        {isRecording
-          ? 'Release to stop recording'
+        {isTranscribing
+          ? 'Transcribing...'
+          : isRecording
+          ? 'Release to stop recording (transcribing in real-time)'
           : isInTurn
           ? 'Click on agent cards to trigger responses'
           : 'Hold spacebar or click mic to record • Press Enter to send text'}

@@ -391,14 +391,58 @@ app/
 
 #### Known Limitations
 - Real API providers require API keys (use Mock mode for testing)
-- OpenAI Realtime requires WebSocket authorization headers (may need proxy for browser use)
+- OpenAI Realtime requires WebSocket authorization headers (needs proxy for browser use - see below)
 - Voice preview in config panel is placeholder
 - No session history export (stretch goal)
 
 #### Future Improvements
-- Add actual STT transcription for voice input
 - Implement LLM layer for TTS-only providers
 - Add session export to JSON
 - Add voice preview functionality
 - Add PlayHT and Google Cloud providers
 - Add cost tracking dashboard
+
+---
+
+### 2025-11-27 - Bug Fixes
+
+#### Issue 1: Audio Recording Not Submitting
+**Problem:** When recording with spacebar or mic button, the turn wasn't completed after release.
+
+**Root Cause:** The audio was being recorded, but there was no transcription happening. The app expected text input to submit.
+
+**Solution:** Added Web Speech API integration to `InputControls.tsx`:
+- Created TypeScript interfaces for SpeechRecognition API
+- Start speech recognition when recording begins
+- Show interim transcription results in real-time in the text input
+- Auto-submit the transcribed text when recording stops
+
+**Key Changes:**
+- `InputControls.tsx`: Added SpeechRecognition interfaces, `recognitionRef`, `transcriptRef`, `isTranscribing` state
+- Recording now simultaneously captures audio AND transcribes speech
+- After releasing mic, waits 500ms for final transcript, then auto-submits
+
+#### Issue 2: OpenAI Provider Hanging Forever
+**Problem:** Clicking on OpenAI agent in live mode caused it to stay in "Processing..." forever.
+
+**Root Cause:** Browser WebSocket connections cannot send Authorization headers. OpenAI Realtime API requires authentication that browsers can't provide directly without a proxy.
+
+**Solution:** Added proper error handling and timeout:
+- Added 5-second connection timeout
+- Clear error messages explaining the browser limitation
+- Suggests using Mock mode or setting up a backend proxy
+- Error message is now displayed in the agent card
+
+**Key Changes:**
+- `OpenAIProvider.ts`: Added connection timeout, better error messages
+- `types/index.ts`: Added `errorMessage?: string` to AgentSlot
+- `store/index.ts`: Updated `setAgentStatus` to accept optional error message
+- `AgentCard.tsx`: Display error message when agent is in error state
+
+#### Browser WebSocket Authentication Limitation
+For OpenAI Realtime API to work in a browser, you need one of:
+1. **Backend Proxy Server**: WebSocket proxy that adds Authorization header
+2. **Ephemeral Tokens**: Backend generates short-lived tokens for client use
+3. **WebRTC**: OpenAI's WebRTC implementation (different connection method)
+
+For now, **use Mock mode** for browser testing without API infrastructure.

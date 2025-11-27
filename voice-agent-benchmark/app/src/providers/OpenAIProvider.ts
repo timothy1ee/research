@@ -64,13 +64,44 @@ export class OpenAIProvider extends BaseProvider {
     }
 
     const model = this.config.modelId || 'gpt-4o-realtime-preview';
+
+    // Note: Browser WebSockets cannot send Authorization headers.
+    // OpenAI Realtime API requires authentication which browsers can't provide directly.
+    // In production, you would need to:
+    // 1. Use an ephemeral token from your backend
+    // 2. Set up a WebSocket proxy server
+    // 3. Use WebRTC instead of WebSocket
+
+    // Try to connect with API key as query parameter (may not work without proxy)
     const url = `wss://api.openai.com/v1/realtime?model=${model}`;
 
     return new Promise((resolve, reject) => {
-      this.ws = new WebSocket(url);
+      // Set a connection timeout
+      const connectionTimeout = setTimeout(() => {
+        if (this.ws) {
+          this.ws.close();
+          this.ws = null;
+        }
+        reject(new Error(
+          'OpenAI WebSocket connection timeout. Browser WebSocket connections cannot send Authorization headers. ' +
+          'For browser use, you need either: (1) a backend proxy server, (2) ephemeral tokens, or (3) use Mock mode for testing.'
+        ));
+      }, 5000);
+
+      try {
+        this.ws = new WebSocket(url);
+      } catch (err) {
+        clearTimeout(connectionTimeout);
+        reject(new Error(
+          'Failed to create WebSocket connection to OpenAI. ' +
+          'Browser WebSocket connections cannot authenticate directly. Use Mock mode for testing.'
+        ));
+        return;
+      }
 
       this.ws.onopen = () => {
-        // Send authorization
+        clearTimeout(connectionTimeout);
+        // Send session configuration
         this.ws?.send(JSON.stringify({
           type: 'session.update',
           session: {
@@ -93,17 +124,30 @@ export class OpenAIProvider extends BaseProvider {
         resolve();
       };
 
-      this.ws.onerror = (error) => {
-        this.emitError(new Error('WebSocket error'));
-        reject(error);
+      this.ws.onerror = (event) => {
+        clearTimeout(connectionTimeout);
+        console.error('OpenAI WebSocket error:', event);
+        this.emitError(new Error(
+          'OpenAI WebSocket connection failed. This is likely due to browser authentication limitations. ' +
+          'Use Mock mode for testing, or set up a backend proxy for live mode.'
+        ));
+        reject(new Error('WebSocket connection failed - authentication not supported in browser'));
       };
 
       this.ws.onmessage = (event) => {
-        this.handleMessage(JSON.parse(event.data));
+        try {
+          this.handleMessage(JSON.parse(event.data));
+        } catch (err) {
+          console.error('Error parsing WebSocket message:', err);
+        }
       };
 
-      this.ws.onclose = () => {
+      this.ws.onclose = (event) => {
+        clearTimeout(connectionTimeout);
         this.connected = false;
+        if (!event.wasClean) {
+          console.warn('OpenAI WebSocket closed unexpectedly:', event.code, event.reason);
+        }
       };
     });
   }

@@ -62,6 +62,7 @@ export interface AgentSlot {
   conversationHistory: Message[];
   status: AgentStatus;
   color: string;
+  errorMessage?: string;
 }
 
 export type AgentStatus = 'idle' | 'ready' | 'processing' | 'speaking' | 'complete' | 'error';

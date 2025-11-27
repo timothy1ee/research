@@ -87,7 +87,7 @@ interface AppState {
 
   // Agent actions
   updateAgent: (agentId: string, updates: Partial<AgentSlot>) => void;
-  setAgentStatus: (agentId: string, status: AgentStatus) => void;
+  setAgentStatus: (agentId: string, status: AgentStatus, errorMessage?: string) => void;
   addAgentMessage: (agentId: string, message: Message) => void;
 
   // Recording actions
@@ -186,13 +186,15 @@ export const useAppStore = create<AppState>()(
         }));
       },
 
-      // Set agent status
-      setAgentStatus: (agentId: string, status: AgentStatus) => {
+      // Set agent status with optional error message
+      setAgentStatus: (agentId: string, status: AgentStatus, errorMessage?: string) => {
         set((state) => ({
           session: {
             ...state.session,
             agents: state.session.agents.map((agent) =>
-              agent.id === agentId ? { ...agent, status } : agent
+              agent.id === agentId
+                ? { ...agent, status, errorMessage: status === 'error' ? errorMessage : undefined }
+                : agent
             ),
           },
         }));
@@ -351,7 +353,8 @@ export const useAppStore = create<AppState>()(
           setAgentStatus(agentId, 'complete');
         } catch (error) {
           console.error(`Error from ${agent.name}:`, error);
-          setAgentStatus(agentId, 'error');
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+          setAgentStatus(agentId, 'error', errorMessage);
         }
       },
 
