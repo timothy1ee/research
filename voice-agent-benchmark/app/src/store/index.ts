@@ -262,25 +262,35 @@ export const useAppStore = create<AppState>()(
 
       // Trigger response from a specific agent
       triggerAgentResponse: async (agentId: string) => {
+        console.log('[Store] triggerAgentResponse called for:', agentId);
         const { session, useMockProviders, getOrCreateProvider, setAgentStatus, addAgentMessage } = get();
         const agent = session.agents.find((a) => a.id === agentId);
 
-        if (!agent) return;
+        if (!agent) {
+          console.error('[Store] Agent not found:', agentId);
+          return;
+        }
 
+        console.log('[Store] Agent found:', agent.name, agent.providerId);
+        console.log('[Store] Using mock providers:', useMockProviders);
         setAgentStatus(agentId, 'processing');
 
         try {
+          console.log('[Store] Getting or creating provider...');
           const provider = getOrCreateProvider(agentId);
+          console.log('[Store] Provider:', provider.name, 'isConnected:', provider.isConnected());
 
           // Get API key if not using mock
           if (!useMockProviders) {
             const apiKey = getApiKey(agent.providerId);
+            console.log('[Store] API key found:', !!apiKey, 'length:', apiKey?.length || 0);
             if (apiKey) {
               provider.configure({ apiKey });
             }
           }
 
           // Configure voice and model
+          console.log('[Store] Configuring voice:', agent.voiceId, 'model:', agent.modelId);
           provider.configure({
             voiceId: agent.voiceId,
             modelId: agent.modelId,
@@ -288,7 +298,9 @@ export const useAppStore = create<AppState>()(
 
           // Connect if not connected
           if (!provider.isConnected()) {
+            console.log('[Store] Provider not connected, connecting...');
             await provider.connect();
+            console.log('[Store] Provider connected successfully');
           }
 
           let result: { text: string; audio: Blob; metrics: LatencyMetrics };
@@ -296,14 +308,20 @@ export const useAppStore = create<AppState>()(
           // Check if provider supports full conversation
           if (provider.sendConversationMessage) {
             const lastUserMessage = agent.conversationHistory[agent.conversationHistory.length - 1];
+            console.log('[Store] Using sendConversationMessage');
+            console.log('[Store] Last user message:', lastUserMessage?.content);
+            console.log('[Store] History length:', agent.conversationHistory.length - 1);
+            console.log('[Store] System prompt:', session.systemPrompt?.substring(0, 50) + '...');
             result = await provider.sendConversationMessage(
               lastUserMessage.content,
               agent.conversationHistory.slice(0, -1),
               session.systemPrompt
             );
+            console.log('[Store] Got response:', result.text?.substring(0, 100) + '...');
           } else {
             // For TTS-only providers, we need to generate a response first
             // In a real app, this would call an LLM
+            console.log('[Store] Using synthesize (TTS-only provider)');
             const mockResponse = `This is a response from ${agent.name} to: "${agent.conversationHistory[agent.conversationHistory.length - 1].content}"`;
             const synthResult = await provider.synthesize(mockResponse);
             result = {
@@ -311,6 +329,7 @@ export const useAppStore = create<AppState>()(
               audio: synthResult.audio,
               metrics: synthResult.metrics,
             };
+            console.log('[Store] Synthesis complete');
           }
 
           // Create audio URL
