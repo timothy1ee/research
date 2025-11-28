@@ -1,0 +1,107 @@
+.record-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+}
+
+.record-ring {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.record-ring::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid #3a3a5a;
+  transition: all 0.3s ease;
+}
+
+.record-ring.active::before {
+  border-color: #ef4444;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.7;
+  }
+}
+
+.record-button {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(145deg, #2a2a4a 0%, #1a1a2e 100%);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.record-button:hover:not(.disabled) {
+  transform: scale(1.05);
+  box-shadow: 
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.record-button:active:not(.disabled) {
+  transform: scale(0.95);
+}
+
+.record-button.recording {
+  background: linear-gradient(145deg, #ef4444 0%, #b91c1c 100%);
+  box-shadow: 
+    0 4px 20px rgba(239, 68, 68, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.record-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.record-icon {
+  font-size: 2rem;
+  filter: grayscale(0);
+  transition: filter 0.2s ease;
+}
+
+.record-button.disabled .record-icon {
+  filter: grayscale(1);
+}
+
+.record-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0;
+}
+
+.record-hint {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+  height: 1.2em;
+}
+

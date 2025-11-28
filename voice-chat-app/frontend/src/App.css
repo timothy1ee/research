@@ -1,0 +1,228 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #0a0a14;
+}
+
+.error-banner {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.9) 0%, rgba(185, 28, 28, 0.9) 100%);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.error-banner button {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0 0.5rem;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #64748b;
+}
+
+.status-dot.connected {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.status-dot.disconnected {
+  background: #ef4444;
+}
+
+.main-content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 2rem;
+  padding: 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #64748b;
+  margin: 0 0 1rem 0;
+}
+
+.agents-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.agents-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.conversation-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-height: 0;
+  height: 100%;
+}
+
+.transcript-container {
+  flex: 1;
+  min-height: 300px;
+  max-height: 500px;
+  overflow: hidden;
+}
+
+.controls-container {
+  background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+  border: 1px solid #2a2a4a;
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.dual-mode-indicator {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, rgba(79, 70, 229, 0.9) 100%);
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+}
+
+.dual-mode-indicator span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: white;
+}
+
+.dual-agents {
+  font-size: 0.8rem !important;
+  opacity: 0.9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .main-content {
+    grid-template-columns: 1fr;
+    padding: 1.5rem;
+  }
+  
+  .agents-grid {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+  
+  .agents-grid > * {
+    min-width: 280px;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+    gap: 1rem;
+  }
+  
+  .dual-mode-indicator {
+    bottom: 1rem;
+    padding: 0.5rem 1rem;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
+/* ElevenLabs SDK Integration */
+.elevenlabs-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+}
+
+.status-badge {
+  padding: 1rem 2rem;
+  border-radius: 2rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.status-badge.connected {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+  animation: pulse-green 2s infinite;
+}
+
+.status-badge.connecting {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  animation: pulse-orange 1s infinite;
+}
+
+.status-badge.disconnected {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+  50% { box-shadow: 0 4px 25px rgba(16, 185, 129, 0.6); }
+}
+
+@keyframes pulse-orange {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.elevenlabs-status .hint {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.speaking-indicator {
+  text-align: center;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+  border-radius: 0.5rem;
+  color: var(--accent-primary);
+  font-weight: 500;
+  animation: fade-pulse 1.5s infinite;
+}
+
+@keyframes fade-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}

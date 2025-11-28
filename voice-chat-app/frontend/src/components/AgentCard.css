@@ -1,0 +1,126 @@
+.agent-card {
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+  border: 1px solid #2a2a4a;
+  border-radius: 16px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.agent-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #4a4a8a, transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.agent-card:hover {
+  border-color: #4a4a8a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(74, 74, 138, 0.2);
+}
+
+.agent-card:hover::before {
+  opacity: 1;
+}
+
+.agent-card.active {
+  border-color: #6366f1;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+.agent-card.primary {
+  border-color: #10b981;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.agent-card.primary::before {
+  background: linear-gradient(90deg, transparent, #10b981, transparent);
+  opacity: 1;
+}
+
+.agent-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.agent-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0;
+}
+
+.agent-status {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.agent-description {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 1rem 0;
+  line-height: 1.4;
+}
+
+.agent-voice {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.voice-label {
+  color: #64748b;
+}
+
+.voice-value {
+  color: #a78bfa;
+  font-weight: 500;
+}
+
+.agent-action {
+  margin-top: auto;
+}
+
+.btn-active,
+.btn-select {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-active {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  cursor: default;
+}
+
+.btn-select {
+  background: transparent;
+  border: 1px solid #4a4a8a;
+  color: #a78bfa;
+}
+
+.btn-select:hover {
+  background: rgba(167, 139, 250, 0.1);
+  border-color: #a78bfa;
+}
+
