@@ -49,7 +49,14 @@ Each iteration brings you closer to the long-term goal.
 
 ## Projects
 
-- `voice-chat-app/` - Voice chat application with multiple AI agent backends
+### voice-chat-app
+
+Voice chat application with multiple AI agent backends.
+
+**Prompt:**
+> I want you to make a React + Express (typescript) app that will let me voice chat with either OpenAI (either voice-to-voice, or STT-LLM-TTS) or Eleven Labs. I want to be able to hot swap at any time.
+>
+> @commands/build_project.md
 
 ## Commands
 
